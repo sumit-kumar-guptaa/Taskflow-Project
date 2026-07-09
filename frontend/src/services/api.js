@@ -15,6 +15,9 @@ api.interceptors.request.use(config => {
 api.interceptors.response.use(
   res => res,
   err => {
+    if (err.config?.silentError) {
+      return Promise.reject(err)
+    }
     if (err.response?.status === 401) {
       localStorage.removeItem('token')
       localStorage.removeItem('user')
@@ -84,6 +87,14 @@ export const tasksAPI = {
 // Dashboard
 export const dashboardAPI = {
   get: () => api.get('/dashboard'),
+}
+
+// Notifications
+export const notificationsAPI = {
+  getUnread: () => api.get('/notifications/unread', { silentError: true }),
+  getRecent: () => api.get('/notifications', { silentError: true }),
+  markRead: (id) => api.post(`/notifications/${id}/read`, null, { silentError: true }),
+  markAllRead: () => api.post('/notifications/read-all', null, { silentError: true }),
 }
 
 export default api

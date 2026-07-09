@@ -353,6 +353,24 @@ cp .env.example .env
 # Fill in DB_URL, JWT_SECRET, GEMINI_API_KEY (or OpenAI key)
 ```
 
+### Lightsail VPS (Docker, single command)
+
+```bash
+# Ubuntu VPS
+sudo apt update
+sudo apt install -y docker.io docker-compose-plugin
+sudo usermod -aG docker $USER
+newgrp docker
+
+# in repo root
+cp .env.example .env
+# update .env values (DB_PASSWORD, JWT_SECRET, CORS_ORIGINS, etc.)
+chmod +x docker/setup-vps.sh
+./docker/setup-vps.sh
+```
+
+This runs Postgres + backend + frontend, with Nginx in the frontend container proxying `/api` and `/uploads` to the backend.
+
 ### 2. Start Infrastructure (Kafka + Redis + PostgreSQL)
 
 ```bash

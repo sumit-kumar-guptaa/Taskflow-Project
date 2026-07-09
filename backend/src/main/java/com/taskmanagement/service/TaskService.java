@@ -21,6 +21,7 @@ public class TaskService {
     private final CommentRepository commentRepository;
     private final ActivityLogRepository activityLogRepository;
     private final UserService userService;
+    private final NotificationService notificationService;
     
     @Transactional
     public TaskResponse createTask(String email, TaskRequest request) {
@@ -45,6 +46,8 @@ public class TaskService {
         logActivity(saved, creator, "CREATED", "Task created: " + task.getTitle());
         if (assignee != null)
             logActivity(saved, creator, "ASSIGNED", "Task assigned to " + assignee.getName());
+        if (assignee != null)
+            notificationService.notifyTaskAssigned(saved, creator, assignee);
         return mapTask(saved);
     }
     
@@ -87,6 +90,9 @@ public class TaskService {
         
         Task saved = taskRepository.save(task);
         if (!changes.isEmpty()) logActivity(saved, user, "UPDATED", changes);
+        if (saved.getAssignedTo() != null) {
+            notificationService.notifyTaskUpdated(saved, user, saved.getAssignedTo());
+        }
         return mapTask(saved);
     }
     
@@ -112,7 +118,7 @@ public class TaskService {
     }
     
     private Task findTask(UUID id) {
-        return taskRepository.findById(id)
+        return taskRepository.findByIdWithRelations(id)
             .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
     }
     

@@ -1,19 +1,24 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Search, Bell, Sun, Moon, X } from 'lucide-react'
-import { tasksAPI } from '../../services/api'
+import { Search, Bell, X } from 'lucide-react'
+import { tasksAPI, notificationsAPI } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { formatDistanceToNow } from 'date-fns'
+import toast from 'react-hot-toast'
 
 export default function Topbar({ title }) {
   const [search, setSearch] = useState('')
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
-  const [dark, setDark] = useState(true)
+  const [notifications, setNotifications] = useState([])
+  const [showNotifications, setShowNotifications] = useState(false)
   const { user } = useAuth()
   const navigate = useNavigate()
   const searchRef = useRef(null)
+  const notificationsRef = useRef(null)
+  const seenRef = useRef(new Set())
   const timerRef = useRef(null)
+  const pollRef = useRef(null)
 
   useEffect(() => {
     if (!search.trim()) { setResults([]); return }
@@ -34,7 +39,54 @@ export default function Topbar({ title }) {
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
+  const syncNotifications = useCallback(async () => {
+    try {
+      const unreadRes = await notificationsAPI.getUnread()
+      const unread = unreadRes.data.data || []
+      unread.forEach((n) => {
+        if (!seenRef.current.has(n.id)) {
+          seenRef.current.add(n.id)
+          toast.success(n.message)
+        }
+      })
+      await Promise.all(unread.map((n) => notificationsAPI.markRead(n.id).catch(() => {})))
+      const recentRes = await notificationsAPI.getRecent()
+      setNotifications(recentRes.data.data || [])
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    if (!user || !localStorage.getItem('token')) return
+    syncNotifications()
+    pollRef.current = setInterval(syncNotifications, 15000)
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current)
+    }
+  }, [user, syncNotifications])
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (!notificationsRef.current?.contains(e.target)) setShowNotifications(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
   const getPriorityColor = (p) => ({ HIGH: 'text-red-400', MEDIUM: 'text-amber-400', LOW: 'text-emerald-400' }[p] || '')
+  const unreadCount = notifications.filter(n => !n.read).length
+
+  const handleMarkAllRead = async () => {
+    try {
+      await notificationsAPI.markAllRead()
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    } catch {}
+  }
+
+  const toggleNotifications = () => {
+    const next = !showNotifications
+    setShowNotifications(next)
+    if (next) syncNotifications()
+  }
 
   return (
     <header className="h-16 border-b border-[#1a1a26] bg-[#0e0e16] flex items-center justify-between px-6 flex-shrink-0">
@@ -78,11 +130,56 @@ export default function Topbar({ title }) {
           )}
         </div>
 
-        {/* Notifications (placeholder) */}
-        <button className="relative p-2 rounded-xl text-[#8888aa] hover:text-white hover:bg-[#1a1a26] transition-all">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-500 rounded-full" />
-        </button>
+        {/* Notifications */}
+        <div ref={notificationsRef} className="relative">
+          <button
+            onClick={toggleNotifications}
+            className="relative p-2 rounded-xl text-[#8888aa] hover:text-white hover:bg-[#1a1a26] transition-all"
+          >
+            <Bell className="w-5 h-5" />
+            {unreadCount > 0 && (
+              <span className="absolute top-1 right-1 min-w-4 h-4 px-1 rounded-full bg-brand-500 text-[10px] text-white flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+          {showNotifications && (
+            <div className="absolute right-0 mt-2 w-96 glass rounded-xl border border-[#2a2a3e] overflow-hidden z-50 shadow-2xl">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a1a26]">
+                <span className="text-sm font-medium text-white">Notifications</span>
+                <button onClick={handleMarkAllRead} className="text-xs text-brand-300 hover:text-brand-200">
+                  Mark all read
+                </button>
+              </div>
+              <div className="max-h-96 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-sm text-[#8888aa]">No notifications yet.</div>
+                ) : notifications.map(n => (
+                  <button
+                    key={n.id}
+                    onClick={async () => {
+                      if (!n.read) {
+                        await notificationsAPI.markRead(n.id).catch(() => {})
+                        setNotifications(prev => prev.map(item => item.id === n.id ? { ...item, read: true } : item))
+                      }
+                    }}
+                    className={`w-full text-left px-4 py-3 border-b border-[#1a1a26] last:border-0 hover:bg-[#1a1a26] transition-colors ${n.read ? 'opacity-70' : ''}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className={`w-2.5 h-2.5 rounded-full mt-2 ${n.read ? 'bg-[#3a3a52]' : 'bg-brand-500'}`} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-white leading-snug">{n.message}</p>
+                        <p className="text-xs text-[#8888aa] mt-1">
+                          {n.actorName} · {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* User avatar */}
         {user && (

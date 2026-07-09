@@ -13,8 +13,11 @@ public interface ProjectRepository extends JpaRepository<Project, UUID> {
 
     long countByTeamId(UUID teamId);
     
-    @Query("SELECT p FROM Project p WHERE p.team.id IN " +
-           "(SELECT t.id FROM Team t JOIN t.members m WHERE m.id = :userId)")
+    @Query("SELECT DISTINCT p FROM Project p " +
+           "LEFT JOIN FETCH p.team t " +
+           "LEFT JOIN FETCH p.createdBy cb " +
+           "WHERE p.team.id IN " +
+           "(SELECT t2.id FROM Team t2 JOIN t2.members m WHERE m.id = :userId)")
     List<Project> findProjectsByTeamMember(UUID userId);
     
     Page<Project> findByStatus(ProjectStatus status, Pageable pageable);
