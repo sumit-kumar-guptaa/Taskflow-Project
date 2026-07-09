@@ -7,10 +7,12 @@ import com.taskmanagement.exception.*;
 import com.taskmanagement.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class TaskService {
     private final TaskRepository taskRepository;
@@ -20,6 +22,7 @@ public class TaskService {
     private final ActivityLogRepository activityLogRepository;
     private final UserService userService;
     
+    @Transactional
     public TaskResponse createTask(String email, TaskRequest request) {
         User creator = userService.findByEmail(email);
         Project project = projectRepository.findById(request.getProjectId())
@@ -54,6 +57,7 @@ public class TaskService {
         return mapTask(findTask(id));
     }
     
+    @Transactional
     public TaskResponse updateTask(UUID id, TaskRequest request, String email) {
         Task task = findTask(id);
         User user = userService.findByEmail(email);
@@ -86,6 +90,7 @@ public class TaskService {
         return mapTask(saved);
     }
     
+    @Transactional
     public void deleteTask(UUID id, String email) {
         taskRepository.deleteById(id);
     }

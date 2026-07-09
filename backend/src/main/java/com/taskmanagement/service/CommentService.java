@@ -7,10 +7,12 @@ import com.taskmanagement.exception.*;
 import com.taskmanagement.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class CommentService {
     private final CommentRepository commentRepository;
@@ -18,6 +20,7 @@ public class CommentService {
     private final ActivityLogRepository activityLogRepository;
     private final UserService userService;
     
+    @Transactional
     public CommentResponse addComment(UUID taskId, String email, CommentRequest request) {
         User user = userService.findByEmail(email);
         Task task = taskRepository.findById(taskId)
@@ -40,6 +43,7 @@ public class CommentService {
             .map(this::mapComment).collect(Collectors.toList());
     }
     
+    @Transactional
     public void deleteComment(UUID id, String email) {
         Comment comment = commentRepository.findById(id)
             .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));

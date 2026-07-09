@@ -8,6 +8,7 @@ import com.taskmanagement.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
 import java.nio.file.*;
@@ -16,6 +17,7 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
@@ -28,6 +30,7 @@ public class UserService {
         return mapUser(findByEmail(email));
     }
     
+    @Transactional
     public UserResponse updateProfile(String email, UpdateProfileRequest request) {
         User user = findByEmail(email);
         if (request.getName() != null) user.setName(request.getName());
@@ -36,6 +39,7 @@ public class UserService {
         return mapUser(userRepository.save(user));
     }
     
+    @Transactional
     public UserResponse uploadProfileImage(String email, MultipartFile file) throws IOException {
         User user = findByEmail(email);
         Path uploadPath = Paths.get(uploadDir, "profiles");
@@ -46,6 +50,7 @@ public class UserService {
         return mapUser(userRepository.save(user));
     }
     
+    @Transactional
     public void changePassword(String email, ChangePasswordRequest request) {
         User user = findByEmail(email);
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword()))

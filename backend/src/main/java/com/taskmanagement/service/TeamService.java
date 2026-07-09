@@ -7,10 +7,12 @@ import com.taskmanagement.exception.*;
 import com.taskmanagement.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class TeamService {
     private final TeamRepository teamRepository;
@@ -18,6 +20,7 @@ public class TeamService {
     private final UserRepository userRepository;
     private final UserService userService;
     
+    @Transactional
     public TeamResponse createTeam(String creatorEmail, TeamRequest request) {
         User creator = userService.findByEmail(creatorEmail);
         Team team = Team.builder()
@@ -40,6 +43,7 @@ public class TeamService {
             .orElseThrow(() -> new ResourceNotFoundException("Team not found")));
     }
     
+    @Transactional
     public TeamResponse updateTeam(UUID id, TeamRequest request, String email) {
         Team team = findTeam(id);
         team.setTeamName(request.getTeamName());
@@ -47,6 +51,7 @@ public class TeamService {
         return mapTeam(teamRepository.save(team));
     }
     
+    @Transactional
     public TeamResponse addMember(UUID teamId, UUID userId) {
         Team team = findTeam(teamId);
         User user = userRepository.findById(userId)
@@ -55,12 +60,14 @@ public class TeamService {
         return mapTeam(teamRepository.save(team));
     }
     
+    @Transactional
     public TeamResponse removeMember(UUID teamId, UUID userId) {
         Team team = findTeam(teamId);
         team.getMembers().removeIf(m -> m.getId().equals(userId));
         return mapTeam(teamRepository.save(team));
     }
     
+    @Transactional
     public void deleteTeam(UUID id) {
         teamRepository.deleteById(id);
     }
