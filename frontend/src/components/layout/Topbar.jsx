@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, Bell, X } from 'lucide-react'
-import { tasksAPI, notificationsAPI } from '../../services/api'
+import { tasksAPI, notificationsAPI, getUploadUrl } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { formatDistanceToNow } from 'date-fns'
 import toast from 'react-hot-toast'
@@ -184,8 +184,12 @@ export default function Topbar({ title }) {
         {/* User avatar */}
         {user && (
           <button onClick={() => navigate('/profile')}
-            className="w-9 h-9 rounded-full bg-brand-500/20 border border-brand-500/40 flex items-center justify-center text-brand-300 text-sm font-bold hover:border-brand-500 transition-all">
-            {user.name?.charAt(0).toUpperCase()}
+            className="w-9 h-9 rounded-full bg-brand-500/20 border border-brand-500/40 flex items-center justify-center text-brand-300 text-sm font-bold hover:border-brand-500 transition-all overflow-hidden">
+            {user.profileImage ? (
+              <img src={getUploadUrl(user.profileImage)} alt="" className="w-full h-full object-cover" />
+            ) : (
+              user.name?.charAt(0).toUpperCase()
+            )}
           </button>
         )}
       </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Users, Plus, Search, UserPlus, UserMinus, Trash2, Crown, Settings } from 'lucide-react'
-import { teamsAPI, usersAPI } from '../services/api'
+import { teamsAPI, usersAPI, getUploadUrl } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
@@ -142,9 +142,13 @@ function TeamCard({ team, currentUserId, onEdit, onDelete, onAddMember, onRemove
         <div className="flex items-center gap-2">
           <div className="flex -space-x-2">
             {(team.members || []).slice(0, 5).map(m => (
-              <div key={m.id} className="w-8 h-8 rounded-full border-2 border-[#0e0e16] bg-brand-500/20 border-brand-500/40 flex items-center justify-center text-brand-300 text-xs font-bold"
+              <div key={m.id} className="w-8 h-8 rounded-full border-2 border-[#0e0e16] bg-brand-500/20 border-brand-500/40 flex items-center justify-center text-brand-300 text-xs font-bold overflow-hidden"
                 title={m.name}>
-                {m.name?.charAt(0)}
+                {m.profileImage ? (
+                  <img src={getUploadUrl(m.profileImage)} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  m.name?.charAt(0).toUpperCase()
+                )}
               </div>
             ))}
             {(team.members?.length || 0) > 5 && (
@@ -164,8 +168,12 @@ function TeamCard({ team, currentUserId, onEdit, onDelete, onAddMember, onRemove
           {(team.members || []).map(m => (
             <div key={m.id} className="flex items-center justify-between py-2">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-brand-500/20 border border-brand-500/40 flex items-center justify-center text-brand-300 text-sm font-bold">
-                  {m.name?.charAt(0)}
+                <div className="w-8 h-8 rounded-full bg-brand-500/20 border border-brand-500/40 flex items-center justify-center text-brand-300 text-sm font-bold overflow-hidden">
+                  {m.profileImage ? (
+                    <img src={getUploadUrl(m.profileImage)} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    m.name?.charAt(0).toUpperCase()
+                  )}
                 </div>
                 <div>
                   <p className="text-sm text-white flex items-center gap-2">

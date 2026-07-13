@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { User, Mail, Briefcase, Lock, Camera, Save, Shield } from 'lucide-react'
-import { usersAPI } from '../services/api'
+import { usersAPI, getUploadUrl } from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
 
@@ -41,7 +41,7 @@ export default function ProfilePage() {
         <div className="flex items-center gap-6">
           <div className="relative">
             <div className="w-20 h-20 rounded-2xl bg-brand-500/20 border border-brand-500/40 flex items-center justify-center text-brand-300 text-2xl font-bold overflow-hidden">
-              {user?.profileImage ? <img src={user.profileImage} alt="" className="w-full h-full object-cover" /> : user?.name?.charAt(0).toUpperCase()}
+              {user?.profileImage ? <img src={getUploadUrl(user.profileImage)} alt="" className="w-full h-full object-cover" /> : user?.name?.charAt(0).toUpperCase()}
             </div>
             <button onClick={() => fileRef.current?.click()}
               className="absolute -bottom-2 -right-2 w-8 h-8 bg-brand-500 rounded-xl flex items-center justify-center hover:bg-brand-600 transition-colors">
