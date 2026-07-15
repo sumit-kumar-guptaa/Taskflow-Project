@@ -127,7 +127,12 @@ export default function ChatPage() {
     setConnected('connecting')
 
     const client = new Client({
-      webSocketFactory: () => new SockJS('/ws'),
+      webSocketFactory: () => {
+        const apiUrl = import.meta.env.VITE_API_URL || ''
+        // Derive the WS base from the API URL (strip '/api' suffix)
+        const wsBase = apiUrl.replace(/\/api\/?$/, '')
+        return new SockJS(`${wsBase}/ws`)
+      },
       connectHeaders: { Authorization: `Bearer ${token}` },
       reconnectDelay: 5000,
       heartbeatIncoming: 10000,
