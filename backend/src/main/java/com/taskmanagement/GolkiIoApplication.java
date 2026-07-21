@@ -6,8 +6,8 @@ import org.springframework.scheduling.annotation.EnableAsync;
 
 @SpringBootApplication
 @EnableAsync
-public class golki.ioApplication {
+public class GolkiIoApplication {
     public static void main(String[] args) {
-        SpringApplication.run(golki.ioApplication.class, args);
+        SpringApplication.run(GolkiIoApplication.class, args);
     }
 }

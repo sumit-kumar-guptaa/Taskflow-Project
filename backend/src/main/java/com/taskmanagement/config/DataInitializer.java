@@ -19,17 +19,17 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (!userRepository.existsByEmail("admin@golki.io.io")) {
+        if (!userRepository.existsByEmail("admin@golki.io")) {
             User admin = User.builder()
                     .name("Admin User")
-                    .email("admin@golki.io.io")
+                    .email("admin@golki.io")
                     .password(passwordEncoder.encode("admin123"))
                     .role(Role.ADMIN)
                     .jobTitle("System Administrator")
                     .bio("golki.io system administrator")
                     .build();
             userRepository.save(admin);
-            log.info("✅ Default admin created: admin@golki.io.io / admin123");
+            log.info("✅ Default admin created: admin@golki.io / admin123");
         }
     }
 }
